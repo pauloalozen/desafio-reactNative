@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import api from './services/api';
 
 import {
   SafeAreaView,
@@ -10,22 +11,14 @@ import {
   TouchableOpacity,
 } from "react-native";
 
-import api from './services/api'
-
 export default function App() {
+  const [repositories, setRepositories] = useState([]);
 
-  const [repositories, setRepositories] = useState([])
-  
   useEffect(() => {
     api.get('repositories').then(response => {
-      setRepositories(response.data)
+      setRepositories(response.data);
     })
-  }, [])
-  
-/*   async function handleLikeRepository(id) {
-    const { data } = await api.post(`repositories/${id}/like`)
-
-  } */
+  }, []);
 
   async function handleLikeRepository(id) {
     const response = await api.post(`repositories/${id}/like`);
@@ -41,72 +34,51 @@ export default function App() {
     });
 
     setRepositories(repositoriesUpdated);
-  }  
-
-  function ExtractTechs({ techs }) {
-
-    let techsText = techs.slice(2)
-    techsText = techsText.slice(0,-2)
-    techsText = techsText.replace(/'/g, "")
-    techsText = techsText.replace(/ /g, "")
-
-    const techsArray = techsText.split(",")
-
-    return (
-      <>
-        <View style={styles.techsContainer}>
-          {techsArray.map(techs => (
-              <Text style={styles.tech} key={techs}>
-                {techs}
-              </Text>
-          ))}
-        </View>
-      </>
-    )
   }
 
   return (
     <>
       <StatusBar barStyle="light-content" backgroundColor="#7159c1" />
       <SafeAreaView style={styles.container}>
-        
         <FlatList
           data={repositories}
-          keyExtractor={repositorie => repositorie.id}
-          renderItem={({ item: repo }) => (
-
+          keyExtractor={repository => repository.id}
+          renderItem={({ item: repository }) => (
             <View style={styles.repositoryContainer}>
-              <Text style={styles.repository}>{repo.title}</Text>
+              <Text style={styles.repository}>{repository.title}</Text>
 
-              <ExtractTechs techs={repo.techs}/>
-
+              <View style={styles.techsContainer}>
+                {repository.techs.map(tech => (
+                  <Text key={tech} style={styles.tech}>
+                    {tech}
+                  </Text>
+                ))}
+              </View>
               <View style={styles.likesContainer}>
                 <Text
                   style={styles.likeText}
-                  // Remember to replace "1" below with repository ID: {`repository-likes-${repository.id}`}
-                  testID={`repository-likes-${repo.id}`}
+                  testID={`repository-likes-${repository.id}`}
                 >
-                  {repo.likes} {repo.likes > 1 ? 'curtidas' : 'curtida'}
+                  {repository.likes} curtida{repository.likes > 1 ? 's' : ''}
                 </Text>
               </View>
 
               <TouchableOpacity
                 style={styles.button}
-                onPress={() => handleLikeRepository(repo.id)}
-                // Remember to replace "1" below with repository ID: {`like-button-${repository.id}`}
-                testID={`like-button-${repo.id}`}
+                onPress={() => handleLikeRepository(repository.id)}
+                testID={`like-button-${repository.id}`}
               >
                 <Text style={styles.buttonText}>Curtir</Text>
               </TouchableOpacity>
             </View>
-          )}
-        />
-      </SafeAreaView>
-    </>
-  );
-}
-
-const styles = StyleSheet.create({
+         )}
+         />
+       </SafeAreaView>
+     </>
+   );
+ }
+ 
+ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#7159c1",
@@ -117,16 +89,15 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     padding: 20,
   },
+
   repository: {
     fontSize: 32,
     fontWeight: "bold",
   },
-
   techsContainer: {
     flexDirection: "row",
     marginTop: 10,
   },
-
   tech: {
     fontSize: 12,
     fontWeight: "bold",
